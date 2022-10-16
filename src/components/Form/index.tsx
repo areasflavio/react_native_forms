@@ -1,4 +1,6 @@
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
 
 import { Button } from '../Button';
 import { ControlledInput } from '../ControlledInput';
@@ -12,8 +14,27 @@ type FormData = {
   password_confirm: string;
 };
 
+const schema = yup.object({
+  name: yup.string().required('Informe seu nome'),
+  email: yup.string().email('Email inválido').required('Informe seu email'),
+  password: yup
+    .string()
+    .min(6, 'A senha deve conter no mínimo 6 dígitos')
+    .required('Informe sua senha'),
+  password_confirm: yup
+    .string()
+    .oneOf([yup.ref('password'), null], 'A confirmação da senha não é válida')
+    .required('Informe sua senha para confirmação'),
+});
+
 export function Form() {
-  const { control, handleSubmit } = useForm<FormData>();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
 
   const handleUserRegister = (data: FormData) => {
     console.log(data);
@@ -26,6 +47,7 @@ export function Form() {
         control={control}
         icon="user"
         placeholder="Nome"
+        error={errors.name}
       />
       <ControlledInput
         name="email"
@@ -34,6 +56,7 @@ export function Form() {
         placeholder="E-mail"
         keyboardType="email-address"
         autoCapitalize="none"
+        error={errors.email}
       />
       <ControlledInput
         name="password"
@@ -41,6 +64,7 @@ export function Form() {
         icon="lock"
         placeholder="Senha"
         secureTextEntry
+        error={errors.password}
       />
       <ControlledInput
         name="password_confirm"
@@ -48,6 +72,7 @@ export function Form() {
         icon="lock"
         placeholder="Confirme a senha"
         secureTextEntry
+        error={errors.password_confirm}
       />
 
       <Button title="Cadastrar" onPress={handleSubmit(handleUserRegister)} />
